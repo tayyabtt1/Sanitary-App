@@ -1,11 +1,8 @@
-// This is a REFERENCE for how to wire up Phase 1 in your real main.dart —
-// merge this init logic into your existing main.dart, don't just replace
-// the whole file if you already have app setup code there.
-
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'services/product_repository.dart';
 import 'data/dummy_products.dart';
+import 'widgets/main_nav.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,7 +32,7 @@ class SanitaryStoreApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         useMaterial3: true,
       ),
-      home: const Placeholder(), // swap for your HomeScreen in Phase 2
+      home: const MainNav(), // bottom-nav shell wiring Home/Products/Manage
     );
   }
 }
