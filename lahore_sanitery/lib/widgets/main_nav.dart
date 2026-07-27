@@ -9,7 +9,7 @@ class MainNav extends StatefulWidget {
   @override
   State<MainNav> createState() => _MainNavState();
 }
- 
+
 class _MainNavState extends State<MainNav> {
   int _currentIndex = 0;
 
