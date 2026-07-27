@@ -1,124 +1,110 @@
-import 'dart:async';
-import 'package:flutter/foundation.dart';
-import 'package:speech_to_text/speech_to_text.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:string_similarity/string_similarity.dart';
-import '../models/product.dart';
+import 'package:flutter/material.dart';
+import '../services/product_repository.dart';
+import '../services/voice_search_service.dart';
+import '../widgets/mic_button.dart';
+import '../widgets/category_tile.dart';
+import '../widgets/voice_search_sheet.dart';
+import 'search_results_screen.dart';
 
-/// Handles speech-to-text capture and fuzzy matching of the
-/// transcribed text against product name/aliases/category.
-///
-/// Locale is set to 'ur_PK' since the client speaks a mix of
-/// Urdu/English product names — Android's Urdu speech model handles
-/// this code-switching better than forcing 'en_US'.
-class VoiceSearchService {
-  final SpeechToText _speech = SpeechToText();
-  bool _isInitialized = false;
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
 
-  /// Must be called (and granted) before listen(). Returns false if
-  /// the user denies mic permission — caller should show a message.
-  Future<bool> requestMicPermission() async {
-    final status = await Permission.microphone.request();
-    return status.isGranted;
-  }
-
-  Future<bool> init() async {
-    if (_isInitialized) return true;
-    _isInitialized = await _speech.initialize(
-      onError: (error) => debugPrint('Speech error: $error'),
-      onStatus: (status) => debugPrint('Speech status: $status'),
-    );
-    return _isInitialized;
-  }
-
-  /// Starts listening and returns the transcribed text once speech
-  /// recognition reports a final result, or null if nothing was
-  /// recognized / permission was denied / initialization failed.
-  ///
-  /// [timeout] is a safety net — some devices occasionally never fire
-  /// a "final result" callback, so we fall back to whatever partial
-  /// text was captured once the timeout passes.
-  Future<String?> listen({Duration timeout = const Duration(seconds: 6)}) async {
-    final hasPermission = await requestMicPermission();
-    if (!hasPermission) return null;
-
-    final available = await init();
-    if (!available) return null;
-
-    String recognizedText = '';
-    final completer = Completer<String?>();
-
-    await _speech.listen(
-      localeId: 'ur_PK',
-      onResult: (result) {
-        recognizedText = result.recognizedWords;
-        if (result.finalResult && !completer.isCompleted) {
-          completer.complete(
-            recognizedText.trim().isEmpty ? null : recognizedText.trim(),
-          );
-        }
-      },
-      listenFor: timeout,
-      pauseFor: const Duration(seconds: 3),
+  Future<void> _handleMicTap(BuildContext context) async {
+    final recognizedText = await showModalBottomSheet<String?>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const SizedBox.expand(child: VoiceSearchSheet()),
     );
 
-    // Fallback in case finalResult never fires on this device.
-    unawaited(Future.delayed(timeout + const Duration(seconds: 1), () {
-      if (!completer.isCompleted) {
-        _speech.stop();
-        completer.complete(
-          recognizedText.trim().isEmpty ? null : recognizedText.trim(),
-        );
-      }
-    }));
+    if (recognizedText == null || recognizedText.trim().isEmpty) return;
+    if (!context.mounted) return;
 
-    return completer.future;
+    final allProducts = ProductRepository().getAll();
+    final matches = VoiceSearchService().matchProducts(
+      recognizedText,
+      allProducts,
+    );
+
+    if (!context.mounted) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SearchResultsScreen(
+          query: recognizedText,
+          results: matches,
+        ),
+      ),
+    );
   }
 
-  void cancel() {
-    _speech.cancel();
-  }
+  @override
+  Widget build(BuildContext context) {
+    final categories = ProductRepository().getAllCategories();
 
-  bool get isListening => _speech.isListening;
-
-  /// Fuzzy-matches [query] against every product's name, aliases, and
-  /// category. Exact substring matches score highest (1.0), otherwise
-  /// falls back to string similarity. Returns matches sorted by score,
-  /// filtered to a minimum relevance threshold.
-  List<Product> matchProducts(String query, List<Product> allProducts) {
-    final normalizedQuery = query.toLowerCase().trim();
-    if (normalizedQuery.isEmpty) return [];
-
-    const threshold = 0.35;
-    final scored = <MapEntry<Product, double>>[];
-
-    for (final product in allProducts) {
-      double bestScore = _scoreAgainst(normalizedQuery, product.name);
-
-      for (final alias in product.aliases) {
-        final aliasScore = _scoreAgainst(normalizedQuery, alias);
-        if (aliasScore > bestScore) bestScore = aliasScore;
-      }
-
-      final categoryScore = _scoreAgainst(normalizedQuery, product.category);
-      if (categoryScore > bestScore) bestScore = categoryScore;
-
-      scored.add(MapEntry(product, bestScore));
-    }
-
-    scored.sort((a, b) => b.value.compareTo(a.value));
-
-    return scored
-        .where((entry) => entry.value >= threshold)
-        .map((entry) => entry.key)
-        .toList();
-  }
-
-  double _scoreAgainst(String query, String target) {
-    final normalizedTarget = target.toLowerCase();
-    if (normalizedTarget.contains(query) || query.contains(normalizedTarget)) {
-      return 1.0;
-    }
-    return StringSimilarity.compareTwoStrings(query, normalizedTarget);
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Lahore Sanitary'),
+        centerTitle: false,
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              const SizedBox(height: 8),
+              MicButton(onTap: () => _handleMicTap(context)),
+              const SizedBox(height: 24),
+              TextField(
+                decoration: InputDecoration(
+                  hintText: 'Search by name or size...',
+                  prefixIcon: const Icon(Icons.search),
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                // Phase 5: wire onSubmitted -> same matchProducts +
+                // SearchResultsScreen flow used above for voice.
+              ),
+              const SizedBox(height: 24),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Quick Categories',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: categories.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 1.1,
+                ),
+                itemBuilder: (context, index) {
+                  return CategoryTile(
+                    categoryName: categories[index],
+                    onTap: () {
+                      // Phase 5: navigate to Products screen filtered
+                      // by this category.
+                    },
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
