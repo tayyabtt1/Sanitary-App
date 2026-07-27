@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/product.dart';
 
@@ -6,6 +7,35 @@ class ProductCard extends StatelessWidget {
   final VoidCallback? onTap;
 
   const ProductCard({super.key, required this.product, this.onTap});
+
+  Widget _buildImage() {
+    if (product.imagePath.isEmpty) {
+      return Container(
+        color: Colors.grey.shade200,
+        child: const Icon(Icons.image_not_supported, size: 32),
+      );
+    }
+
+    if (product.imagePath.startsWith('http')) {
+      return Image.network(
+        product.imagePath,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => Container(
+          color: Colors.grey.shade200,
+          child: const Icon(Icons.image_not_supported, size: 32),
+        ),
+      );
+    }
+
+    return Image.file(
+      File(product.imagePath),
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => Container(
+        color: Colors.grey.shade200,
+        child: const Icon(Icons.image_not_supported, size: 32),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,14 +60,7 @@ class ProductCard extends StatelessWidget {
           children: [
             AspectRatio(
               aspectRatio: 1,
-              child: Image.network(
-                product.imagePath,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  color: Colors.grey.shade200,
-                  child: const Icon(Icons.image_not_supported, size: 32),
-                ),
-              ),
+              child: _buildImage(),
             ),
             Padding(
               padding: const EdgeInsets.all(10),
