@@ -4,6 +4,8 @@ import 'config/app_config.dart';
 import 'services/product_repository.dart';
 import 'data/dummy_products.dart';
 import 'widgets/main_nav.dart';
+import 'theme/app_theme.dart';
+import 'theme/theme_notifier.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,14 +32,20 @@ class SanitaryStoreApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Lahore Sanitary',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        useMaterial3: true,
-      ),
-      home: const MainNav(), // bottom-nav shell wiring Home/Products/Manage
+    // Rebuilds MaterialApp whenever themeNotifier's value changes,
+    // e.g. when ThemeToggleButton is tapped anywhere in the app.
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeNotifier,
+      builder: (context, mode, _) {
+        return MaterialApp(
+          title: 'Lahore Sanitary',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          themeMode: mode,
+          home: const MainNav(),
+        );
+      },
     );
   }
 }
