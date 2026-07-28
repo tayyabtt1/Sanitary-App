@@ -4,6 +4,7 @@ import '../services/voice_search_service.dart';
 import '../widgets/mic_button.dart';
 import '../widgets/category_tile.dart';
 import '../widgets/voice_search_sheet.dart';
+import '../widgets/theme_toggle_button.dart';
 import 'search_results_screen.dart';
 import 'products_screen.dart';
 
@@ -72,6 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('Lahore Sanitary'),
         centerTitle: false,
+        actions: const [ThemeToggleButton()],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -93,7 +95,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     onPressed: () => _goToResults(_searchController.text),
                   ),
                   filled: true,
-                  fillColor: Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
