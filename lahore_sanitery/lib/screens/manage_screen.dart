@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../services/product_repository.dart';
 import '../models/product.dart';
+import '../widgets/theme_toggle_button.dart';
 import 'add_edit_product_screen.dart';
 
 class ManageScreen extends StatefulWidget {
@@ -80,6 +81,7 @@ class _ManageScreenState extends State<ManageScreen> {
       appBar: AppBar(
         title: const Text('Manage Products'),
         actions: [
+          const ThemeToggleButton(),
           PopupMenuButton<String>(
             onSelected: (value) {
               if (value == 'clear_all') _confirmClearAll();
@@ -110,7 +112,7 @@ class _ManageScreenState extends State<ManageScreen> {
                 return Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(

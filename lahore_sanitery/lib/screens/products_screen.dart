@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/product_repository.dart';
 import '../widgets/product_card.dart';
+import '../widgets/theme_toggle_button.dart';
 
 class ProductsScreen extends StatefulWidget {
   /// Optional category to pre-select, e.g. when navigating here from
@@ -31,7 +32,10 @@ class _ProductsScreenState extends State<ProductsScreen> {
         : repo.getByCategory(_selectedCategory);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Lahore Sanitary')),
+      appBar: AppBar(
+        title: const Text('Lahore Sanitary'),
+        actions: const [ThemeToggleButton()],
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -50,7 +54,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     selected: isSelected,
                     selectedColor: Colors.blue,
                     labelStyle: TextStyle(
-                      color: isSelected ? Colors.white : Colors.black87,
+                      color: isSelected ? Colors.white : null,
                     ),
                     onSelected: (_) {
                       setState(() => _selectedCategory = category);
