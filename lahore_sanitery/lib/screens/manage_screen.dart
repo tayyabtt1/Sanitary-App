@@ -33,17 +33,66 @@ class _ManageScreenState extends State<ManageScreen> {
         builder: (_) => AddEditProductScreen(existingProduct: product),
       ),
     );
-    // AddEditProductScreen pops with `true` after a successful
-    // save/delete, so we know to refresh the list here.
     if (result == true) {
       _loadProducts();
+    }
+  }
+
+  Future<void> _confirmClearAll() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear All Products'),
+        content: const Text(
+          'This will permanently delete every product in the app. '
+          'Use this once when you\'re ready to remove sample/dummy '
+          'products and start entering the real catalog. This cannot '
+          'be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child:
+                const Text('Clear All', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await ProductRepository().clearAll();
+      _loadProducts();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('All products cleared')),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Manage Products')),
+      appBar: AppBar(
+        title: const Text('Manage Products'),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'clear_all') _confirmClearAll();
+            },
+            itemBuilder: (context) => const [
+              PopupMenuItem(
+                value: 'clear_all',
+                child: Text('Clear All Products'),
+              ),
+            ],
+          ),
+        ],
+      ),
       body: _products.isEmpty
           ? const Center(
               child: Text(
