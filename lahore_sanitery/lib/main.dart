@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'config/app_config.dart';
 import 'services/product_repository.dart';
 import 'data/dummy_products.dart';
 import 'widgets/main_nav.dart';
@@ -14,8 +15,12 @@ Future<void> main() async {
   // 2. Register adapter + open the products box
   await ProductRepository.init();
 
-  // 3. Seed dummy data ONLY if the box is empty (safe on every restart)
-  await ProductRepository().seedIfEmpty(dummyProducts);
+  // 3. Seed dummy data ONLY if the box is empty AND useDummyData is
+  //    still true in app_config.dart. Once real products are being
+  //    entered by the client, flip that flag to false.
+  if (AppConfig.useDummyData) {
+    await ProductRepository().seedIfEmpty(dummyProducts);
+  }
 
   runApp(const SanitaryStoreApp());
 }
