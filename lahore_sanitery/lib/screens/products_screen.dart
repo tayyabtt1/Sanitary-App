@@ -3,14 +3,24 @@ import '../services/product_repository.dart';
 import '../widgets/product_card.dart';
 
 class ProductsScreen extends StatefulWidget {
-  const ProductsScreen({super.key});
+  /// Optional category to pre-select, e.g. when navigating here from
+  /// tapping a category tile on the Home screen. Defaults to 'All'.
+  final String? initialCategory;
+
+  const ProductsScreen({super.key, this.initialCategory});
 
   @override
   State<ProductsScreen> createState() => _ProductsScreenState();
 }
 
 class _ProductsScreenState extends State<ProductsScreen> {
-  String _selectedCategory = 'All';
+  late String _selectedCategory;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedCategory = widget.initialCategory ?? 'All';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +65,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'Featured Products',
+                  _selectedCategory == 'All'
+                      ? 'Featured Products'
+                      : _selectedCategory,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -64,19 +76,27 @@ class _ProductsScreenState extends State<ProductsScreen> {
             ),
             const SizedBox(height: 12),
             Expanded(
-              child: GridView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: products.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  childAspectRatio: 0.75,
-                ),
-                itemBuilder: (context, index) {
-                  return ProductCard(product: products[index]);
-                },
-              ),
+              child: products.isEmpty
+                  ? const Center(
+                      child: Text(
+                        'No products in this category yet.',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    )
+                  : GridView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: products.length,
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                        childAspectRatio: 0.75,
+                      ),
+                      itemBuilder: (context, index) {
+                        return ProductCard(product: products[index]);
+                      },
+                    ),
             ),
           ],
         ),
