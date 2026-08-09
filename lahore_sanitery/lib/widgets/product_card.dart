@@ -61,31 +61,32 @@ class ProductCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             AspectRatio(
-              aspectRatio: 1,
+              aspectRatio: 1.1,
               child: _buildImage(),
             ),
             Padding(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     product.name,
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       fontSize: 14,
                       color: textColor,
+                      height: 1.25,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
                     'Rs. ${product.price.toStringAsFixed(2)}',
                     style: const TextStyle(
                       color: Colors.blue,
                       fontWeight: FontWeight.bold,
-                      fontSize: 15,
+                      fontSize: 16,
                     ),
                   ),
                 ],
