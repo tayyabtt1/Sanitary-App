@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../services/voice_search_service.dart';
 
-/// Fullscreen "Listening..." modal, now wired to real speech-to-text.
-/// Pops with the recognized text once speech finishes, or null if
-/// cancelled / permission denied / nothing recognized.
+/// Fullscreen "Listening..." modal. Now shows live partial
+/// transcription text as the user speaks, so it's obvious the mic is
+/// actually picking up speech instead of appearing frozen.
 class VoiceSearchSheet extends StatefulWidget {
   const VoiceSearchSheet({super.key});
 
@@ -16,6 +16,7 @@ class _VoiceSearchSheetState extends State<VoiceSearchSheet>
   late final AnimationController _pulseController;
   final VoiceSearchService _voiceService = VoiceSearchService();
 
+  String _liveText = '';
   String _statusText = 'Listening...';
   bool _errorState = false;
 
@@ -27,13 +28,15 @@ class _VoiceSearchSheetState extends State<VoiceSearchSheet>
       duration: const Duration(milliseconds: 1200),
     )..repeat(reverse: true);
 
-    // Start listening right after the first frame renders, so the
-    // "Listening..." UI is visible before we request permission/mic.
     WidgetsBinding.instance.addPostFrameCallback((_) => _startListening());
   }
 
   Future<void> _startListening() async {
-    final result = await _voiceService.listen();
+    final result = await _voiceService.listen(
+      onPartialResult: (partial) {
+        if (mounted) setState(() => _liveText = partial);
+      },
+    );
 
     if (!mounted) return;
 
@@ -42,7 +45,6 @@ class _VoiceSearchSheetState extends State<VoiceSearchSheet>
         _statusText = "Didn't catch that — check mic permission and try again";
         _errorState = true;
       });
-      // Give the user a moment to read the error before closing.
       await Future.delayed(const Duration(seconds: 2));
       if (mounted) Navigator.pop(context, null);
       return;
@@ -115,6 +117,23 @@ class _VoiceSearchSheetState extends State<VoiceSearchSheet>
                       ),
                     ),
                   ),
+                  // Live transcription — shows what's being picked up
+                  // in real time so it's clear the mic is working.
+                  if (_liveText.isNotEmpty && !_errorState) ...[
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: Text(
+                        '"$_liveText"',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.lightBlueAccent,
+                          fontSize: 17,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
