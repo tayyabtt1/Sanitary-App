@@ -39,8 +39,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
       body: SafeArea(
         child: Column(
           children: [
+            const SizedBox(height: 8),
             SizedBox(
-              height: 48,
+              height: 44,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -49,36 +50,61 @@ class _ProductsScreenState extends State<ProductsScreen> {
                 itemBuilder: (context, index) {
                   final category = categories[index];
                   final isSelected = category == _selectedCategory;
-                  return ChoiceChip(
-                    label: Text(category),
-                    selected: isSelected,
-                    selectedColor: Colors.blue,
-                    labelStyle: TextStyle(
-                      color: isSelected ? Colors.white : null,
+                  return GestureDetector(
+                    onTap: () => setState(() => _selectedCategory = category),
+                    child: Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isSelected ? Colors.blue : Colors.transparent,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: isSelected
+                              ? Colors.blue
+                              : Colors.grey.shade400,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        category,
+                        style: TextStyle(
+                          color: isSelected
+                              ? Colors.white
+                              : Theme.of(context).textTheme.bodyLarge?.color,
+                          fontWeight:
+                              isSelected ? FontWeight.bold : FontWeight.normal,
+                          fontSize: 14,
+                        ),
+                      ),
                     ),
-                    onSelected: (_) {
-                      setState(() => _selectedCategory = category);
-                    },
                   );
                 },
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  _selectedCategory == 'All'
-                      ? 'Featured Products'
-                      : _selectedCategory,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _selectedCategory == 'All'
+                        ? 'Featured Products'
+                        : _selectedCategory,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                    ),
+                  ),
+                  if (_selectedCategory != 'All')
+                    TextButton(
+                      onPressed: () => setState(() => _selectedCategory = 'All'),
+                      child: const Text('View All'),
+                    ),
+                ],
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Expanded(
               child: products.isEmpty
                   ? const Center(
@@ -93,9 +119,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
-                        mainAxisSpacing: 12,
-                        crossAxisSpacing: 12,
-                        childAspectRatio: 0.75,
+                        mainAxisSpacing: 14,
+                        crossAxisSpacing: 14,
+                        childAspectRatio: 0.72,
                       ),
                       itemBuilder: (context, index) {
                         return ProductCard(product: products[index]);
