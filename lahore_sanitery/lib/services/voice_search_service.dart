@@ -8,54 +8,53 @@ import '../models/product.dart';
 /// Handles speech-to-text capture and fuzzy matching of the
 /// transcribed text against product name/aliases/category.
 ///
-/// IMPORTANT: locale is hardcoded to 'en_US'. We previously tried
-/// auto-detecting the best available English locale via
-/// _speech.locales(), but on some devices (especially with system
-/// language set to Urdu) that detection unreliably fell back to the
-/// device default, which silently re-introduced the Urdu-transcription
-/// bug. Hardcoding en_US directly is more robust — Google's speech
-/// recognizer supports en_US regardless of the phone's system
-/// language, as long as there's an internet connection.
+/// FIX: a completely fresh SpeechToText() instance + initialize()
+/// call is created on every single search, instead of reusing one
+/// cached instance for the app's whole lifetime. Reusing one instance
+/// across multiple searches left the Android recognizer session in a
+/// stale state, causing the first attempt to only capture a fragment
+/// of what was said (needing 2-3 retries to work properly).
+///
+/// FIX 2: [onStatusChange] reports the recognizer's REAL status
+/// ('listening', 'notListening', etc.). The UI should only tell the
+/// user to start speaking once status == 'listening' — there's a
+/// short startup delay before the mic is actually capturing audio
+/// after listen() is called, and speaking during that gap is what
+/// was clipping the first word.
 class VoiceSearchService {
-  final SpeechToText _speech = SpeechToText();
-  bool _isInitialized = false;
   static const String _localeId = 'en_US';
+  SpeechToText? _activeSession;
 
   Future<bool> requestMicPermission() async {
     final status = await Permission.microphone.request();
     return status.isGranted;
   }
 
-  Future<bool> init() async {
-    if (_isInitialized) return true;
-    _isInitialized = await _speech.initialize(
-      onError: (error) => debugPrint('Speech error: $error'),
-      onStatus: (status) => debugPrint('Speech status: $status'),
-    );
-    return _isInitialized;
-  }
-
-  /// Starts listening. [onPartialResult] fires repeatedly with
-  /// interim text while the user is still speaking, so the UI can
-  /// show live feedback instead of a static "Listening..." with no
-  /// indication anything is being picked up.
-  ///
-  /// Returns the final transcribed text, or null if nothing was
-  /// recognized / permission denied / initialization failed.
   Future<String?> listen({
-    Duration timeout = const Duration(seconds: 6),
+    Duration timeout = const Duration(seconds: 8),
     void Function(String partialText)? onPartialResult,
+    void Function(String status)? onStatusChange,
   }) async {
     final hasPermission = await requestMicPermission();
     if (!hasPermission) return null;
 
-    final available = await init();
+    // Fresh instance every time — this is the key reliability fix.
+    final speech = SpeechToText();
+    _activeSession = speech;
+
+    final available = await speech.initialize(
+      onError: (error) => debugPrint('Speech error: $error'),
+      onStatus: (status) {
+        debugPrint('Speech status: $status');
+        onStatusChange?.call(status);
+      },
+    );
     if (!available) return null;
 
     String recognizedText = '';
     final completer = Completer<String?>();
 
-    await _speech.listen(
+    await speech.listen(
       localeId: _localeId,
       onResult: (result) {
         recognizedText = result.recognizedWords;
@@ -72,21 +71,23 @@ class VoiceSearchService {
 
     unawaited(Future.delayed(timeout + const Duration(seconds: 1), () {
       if (!completer.isCompleted) {
-        _speech.stop();
+        speech.stop();
         completer.complete(
           recognizedText.trim().isEmpty ? null : recognizedText.trim(),
         );
       }
     }));
 
-    return completer.future;
+    final result = await completer.future;
+    speech.cancel();
+    if (identical(_activeSession, speech)) _activeSession = null;
+    return result;
   }
 
   void cancel() {
-    _speech.cancel();
+    _activeSession?.cancel();
+    _activeSession = null;
   }
-
-  bool get isListening => _speech.isListening;
 
   List<Product> matchProducts(String query, List<Product> allProducts) {
     final normalizedQuery = query.toLowerCase().trim();
