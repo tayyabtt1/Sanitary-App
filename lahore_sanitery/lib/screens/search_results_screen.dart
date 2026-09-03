@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/product.dart';
 import '../widgets/product_card.dart';
+import 'product_detail_screen.dart';
 
-/// Shows results after a voice (or typed) search. Reused in Phase 5
-/// for the typed search bar too, so the results UI stays consistent
-/// regardless of how the search was performed.
 class SearchResultsScreen extends StatelessWidget {
   final String query;
   final List<Product> results;
@@ -50,12 +48,23 @@ class SearchResultsScreen extends StatelessWidget {
               itemCount: results.length,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: 0.75,
+                mainAxisSpacing: 14,
+                crossAxisSpacing: 14,
+                childAspectRatio: 0.62,
               ),
               itemBuilder: (context, index) {
-                return ProductCard(product: results[index]);
+                final product = results[index];
+                return ProductCard(
+                  product: product,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ProductDetailScreen(product: product),
+                      ),
+                    );
+                  },
+                );
               },
             ),
     );
