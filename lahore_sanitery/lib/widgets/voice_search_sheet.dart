@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import '../services/voice_search_service.dart';
 
-/// Fullscreen "Listening..." modal. Now shows live partial
-/// transcription text as the user speaks, so it's obvious the mic is
-/// actually picking up speech instead of appearing frozen.
+/// Fullscreen listening modal. Now shows "Preparing microphone..."
+/// until the recognizer confirms it's actually capturing audio, then
+/// switches to "Listening... speak now" — this pacing fix stops
+/// words from getting clipped by speaking too early.
 class VoiceSearchSheet extends StatefulWidget {
   const VoiceSearchSheet({super.key});
 
@@ -17,7 +18,8 @@ class _VoiceSearchSheetState extends State<VoiceSearchSheet>
   final VoiceSearchService _voiceService = VoiceSearchService();
 
   String _liveText = '';
-  String _statusText = 'Listening...';
+  String _statusText = 'Preparing microphone...';
+  bool _isReadyToListen = false;
   bool _errorState = false;
 
   @override
@@ -33,6 +35,15 @@ class _VoiceSearchSheetState extends State<VoiceSearchSheet>
 
   Future<void> _startListening() async {
     final result = await _voiceService.listen(
+      onStatusChange: (status) {
+        if (!mounted) return;
+        if (status == 'listening') {
+          setState(() {
+            _isReadyToListen = true;
+            _statusText = 'Listening... speak now';
+          });
+        }
+      },
       onPartialResult: (partial) {
         if (mounted) setState(() => _liveText = partial);
       },
@@ -85,7 +96,7 @@ class _VoiceSearchSheetState extends State<VoiceSearchSheet>
                   AnimatedBuilder(
                     animation: _pulseController,
                     builder: (context, child) {
-                      final scale = _errorState
+                      final scale = (_errorState || !_isReadyToListen)
                           ? 1.0
                           : 1.0 + (_pulseController.value * 0.15);
                       return Transform.scale(scale: scale, child: child);
@@ -94,7 +105,9 @@ class _VoiceSearchSheetState extends State<VoiceSearchSheet>
                       height: 100,
                       width: 100,
                       decoration: BoxDecoration(
-                        color: _errorState ? Colors.red : Colors.blue,
+                        color: _errorState
+                            ? Colors.red
+                            : (_isReadyToListen ? Colors.blue : Colors.grey),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -117,8 +130,6 @@ class _VoiceSearchSheetState extends State<VoiceSearchSheet>
                       ),
                     ),
                   ),
-                  // Live transcription — shows what's being picked up
-                  // in real time so it's clear the mic is working.
                   if (_liveText.isNotEmpty && !_errorState) ...[
                     const SizedBox(height: 16),
                     Padding(
