@@ -60,17 +60,13 @@ class ProductCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // FIX: square (1.0) instead of 1.1 — frees up more
-            // vertical room below for 2-line names + price, which
-            // was previously overflowing the card by ~38px.
             AspectRatio(
-              aspectRatio: 1,
+              aspectRatio: 1.1,
               child: _buildImage(),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
@@ -79,18 +75,18 @@ class ProductCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
-                      fontSize: 13,
+                      fontSize: 14,
                       color: textColor,
-                      height: 1.2,
+                      height: 1.25,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
                     'Rs. ${product.price.toStringAsFixed(2)}',
                     style: const TextStyle(
                       color: Colors.blue,
                       fontWeight: FontWeight.bold,
-                      fontSize: 15,
+                      fontSize: 16,
                     ),
                   ),
                 ],
