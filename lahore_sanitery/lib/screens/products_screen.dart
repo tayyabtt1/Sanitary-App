@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import '../services/product_repository.dart';
 import '../widgets/product_card.dart';
 import '../widgets/theme_toggle_button.dart';
+import 'product_detail_screen.dart';
 
 class ProductsScreen extends StatefulWidget {
-  /// Optional category to pre-select, e.g. when navigating here from
-  /// tapping a category tile on the Home screen. Defaults to 'All'.
   final String? initialCategory;
 
   const ProductsScreen({super.key, this.initialCategory});
@@ -121,10 +120,22 @@ class _ProductsScreenState extends State<ProductsScreen> {
                         crossAxisCount: 2,
                         mainAxisSpacing: 14,
                         crossAxisSpacing: 14,
-                        childAspectRatio: 0.72,
+                        childAspectRatio: 0.62,
                       ),
                       itemBuilder: (context, index) {
-                        return ProductCard(product: products[index]);
+                        final product = products[index];
+                        return ProductCard(
+                          product: product,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    ProductDetailScreen(product: product),
+                              ),
+                            );
+                          },
+                        );
                       },
                     ),
             ),
