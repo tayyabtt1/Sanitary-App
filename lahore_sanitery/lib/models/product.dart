@@ -2,16 +2,20 @@ import 'package:hive/hive.dart';
 
 /// Core product model for the Sanitary Store app.
 ///
-/// typeId 0 is reserved for this class in Hive. If you add more Hive
-/// models later, give each a unique typeId (1, 2, 3...) — never reuse one.
+/// typeId 0 is reserved for this class in Hive.
 class Product {
-  String id; // unique id, e.g. uuid string
-  String name; // e.g. "1/2 inch PVC Pipe"
-  String category; // e.g. "Pipes", "Nuts & Bolts", "Taps"
+  String id;
+  String name;
+  String category;
   double price;
-  String imagePath; // local file path to the product photo
-  List<String> aliases; // alternate spoken phrasings for voice search
-  // e.g. ["adha inch pipe", "half inch pipe", "aadha inch"]
+  String imagePath;
+  List<String> aliases;
+
+  /// When this product's price was last confirmed/set. Refreshes
+  /// every time the product is saved (both on creation and on edit),
+  /// so it acts as a "how recent is this price" reminder for the
+  /// shop owner — not just a one-time creation date.
+  DateTime lastUpdated;
 
   Product({
     required this.id,
@@ -20,15 +24,19 @@ class Product {
     required this.price,
     required this.imagePath,
     List<String>? aliases,
-  }) : aliases = aliases ?? [];
+    DateTime? lastUpdated,
+  })  : aliases = aliases ?? [],
+        lastUpdated = lastUpdated ?? DateTime.now();
 }
 
 /// Manual TypeAdapter — no build_runner needed.
 ///
-/// Field order below (0,1,2,3,4,5) must stay consistent once you start
-/// saving real data. If you add a new field later, give it the NEXT
-/// unused number — never renumber existing fields, or old saved data
-/// will read back wrong.
+/// Field 6 (lastUpdated) was added after products with fields 0-5
+/// only were already saved on real devices. read() handles that by
+/// falling back to DateTime.now() when field 6 isn't present in the
+/// stored data, so existing saved products don't crash on load —
+/// they just get "now" as their last-updated date the first time
+/// they're read after this update.
 class ProductAdapter extends TypeAdapter<Product> {
   @override
   final int typeId = 0;
@@ -46,13 +54,15 @@ class ProductAdapter extends TypeAdapter<Product> {
       price: fields[3] as double,
       imagePath: fields[4] as String,
       aliases: (fields[5] as List).cast<String>(),
+      lastUpdated:
+          fields.containsKey(6) ? fields[6] as DateTime : DateTime.now(),
     );
   }
 
   @override
   void write(BinaryWriter writer, Product obj) {
     writer
-      ..writeByte(6) // number of fields
+      ..writeByte(7) // number of fields
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -64,6 +74,8 @@ class ProductAdapter extends TypeAdapter<Product> {
       ..writeByte(4)
       ..write(obj.imagePath)
       ..writeByte(5)
-      ..write(obj.aliases);
+      ..write(obj.aliases)
+      ..writeByte(6)
+      ..write(obj.lastUpdated);
   }
 }
