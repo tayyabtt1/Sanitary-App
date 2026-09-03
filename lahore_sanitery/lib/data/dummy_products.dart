@@ -1,11 +1,5 @@
 import '../models/product.dart';
 
-/// Dummy data for Phase 1-2 development, so you can build and preview
-/// screens before real product photos/prices from the client exist.
-///
-/// imagePath here uses network placeholder URLs (picsum.photos) just so
-/// something renders — swap these for real local file paths (from image
-/// picker / camera) once you're doing real product entry in Phase 3.
 final List<Product> dummyProducts = [
   Product(
     id: '1',
@@ -14,6 +8,7 @@ final List<Product> dummyProducts = [
     price: 250,
     imagePath: 'https://picsum.photos/seed/pipe1/300/300',
     aliases: ['adha inch pipe', 'half inch pipe', 'aadha inch'],
+    lastUpdated: DateTime(2026, 8, 12),
   ),
   Product(
     id: '2',
@@ -22,6 +17,7 @@ final List<Product> dummyProducts = [
     price: 12.50,
     imagePath: 'https://picsum.photos/seed/pipe2/300/300',
     aliases: ['pressure pipe', 'hdpe'],
+    lastUpdated: DateTime(2026, 7, 28),
   ),
   Product(
     id: '3',
@@ -30,6 +26,7 @@ final List<Product> dummyProducts = [
     price: 8.99,
     imagePath: 'https://picsum.photos/seed/bolt1/300/300',
     aliases: ['steel bolt', 'bolt set'],
+    lastUpdated: DateTime(2026, 8, 1),
   ),
   Product(
     id: '4',
@@ -38,14 +35,16 @@ final List<Product> dummyProducts = [
     price: 32.00,
     imagePath: 'https://picsum.photos/seed/valve1/300/300',
     aliases: ['ball valve', 'brass valve'],
+    lastUpdated: DateTime(2026, 6, 15),
   ),
   Product(
     id: '5',
-    name: 'Chrome Mixer Tap',
+    name: 'Premium Chrome Basin Mixer Tap',
     category: 'Taps',
-    price: 45.00,
+    price: 12500,
     imagePath: 'https://picsum.photos/seed/tap1/300/300',
     aliases: ['mixer tap', 'chrome tap'],
+    lastUpdated: DateTime(2026, 8, 24),
   ),
   Product(
     id: '6',
@@ -54,6 +53,7 @@ final List<Product> dummyProducts = [
     price: 120.00,
     imagePath: 'https://picsum.photos/seed/basin1/300/300',
     aliases: ['basin', 'ceramic sink'],
+    lastUpdated: DateTime(2026, 5, 30),
   ),
   Product(
     id: '7',
@@ -62,6 +62,7 @@ final List<Product> dummyProducts = [
     price: 5.40,
     imagePath: 'https://picsum.photos/seed/clamp1/300/300',
     aliases: ['clamp', 'pipe clamp'],
+    lastUpdated: DateTime(2026, 7, 5),
   ),
   Product(
     id: '8',
@@ -70,5 +71,6 @@ final List<Product> dummyProducts = [
     price: 450.00,
     imagePath: 'https://picsum.photos/seed/tile1/300/300',
     aliases: ['wall tile', 'ceramic tile'],
+    lastUpdated: DateTime(2026, 6, 20),
   ),
 ];
