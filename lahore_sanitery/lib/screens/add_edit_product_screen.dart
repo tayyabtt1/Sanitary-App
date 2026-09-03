@@ -20,8 +20,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   late final TextEditingController _priceController;
 
   String? _selectedCategory;
-  String? _pickedImagePath; // local file path once a new photo is picked
-  String? _existingImagePath; // path/url already saved on the product
+  String? _pickedImagePath;
+  String? _existingImagePath;
 
   bool get _isEditing => widget.existingProduct != null;
 
@@ -72,8 +72,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       return;
     }
 
-    final finalImagePath =
-        _pickedImagePath ?? _existingImagePath ?? '';
+    final finalImagePath = _pickedImagePath ?? _existingImagePath ?? '';
 
     final repository = ProductRepository();
     final product = Product(
@@ -83,6 +82,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       price: double.parse(_priceController.text.trim()),
       imagePath: finalImagePath,
       aliases: widget.existingProduct?.aliases ?? [],
+      // Refreshed on every save (create AND edit) — this is what
+      // powers the "Last updated" reminder on the product detail
+      // screen, telling the shop owner how recently this price was
+      // confirmed rather than just when the product was first added.
+      lastUpdated: DateTime.now(),
     );
 
     if (_isEditing) {
