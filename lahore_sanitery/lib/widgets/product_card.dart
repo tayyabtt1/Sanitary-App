@@ -58,15 +58,22 @@ class ProductCard extends StatelessWidget {
         ),
         clipBehavior: Clip.antiAlias,
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Square image — leaves maximum room below for text.
             AspectRatio(
-              aspectRatio: 1.1,
+              aspectRatio: 1,
               child: _buildImage(),
             ),
+            // FIX: tighter padding + smaller text + smaller line
+            // height, since the real device rendered cards narrower
+            // (137px) than earlier testing assumed, and the previous
+            // sizing still overflowed by ~7.6px on the bottom.
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
@@ -75,18 +82,18 @@ class ProductCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
-                      fontSize: 14,
+                      fontSize: 12,
                       color: textColor,
-                      height: 1.25,
+                      height: 1.15,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 3),
                   Text(
                     'Rs. ${product.price.toStringAsFixed(2)}',
                     style: const TextStyle(
                       color: Colors.blue,
                       fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                      fontSize: 14,
                     ),
                   ),
                 ],
