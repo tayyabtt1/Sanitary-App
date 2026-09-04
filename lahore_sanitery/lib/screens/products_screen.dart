@@ -120,7 +120,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                         crossAxisCount: 2,
                         mainAxisSpacing: 14,
                         crossAxisSpacing: 14,
-                        childAspectRatio: 0.62,
+                        childAspectRatio: 0.56,
                       ),
                       itemBuilder: (context, index) {
                         final product = products[index];
