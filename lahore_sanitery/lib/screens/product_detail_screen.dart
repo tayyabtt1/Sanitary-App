@@ -146,6 +146,7 @@ class ProductDetailScreen extends StatelessWidget {
                   children: [
                     // Category badge
                     Container(
+                      width: double.infinity,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
@@ -164,13 +165,16 @@ class ProductDetailScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 6),
-                          Text(
-                            'CATEGORY: ${product.category.toUpperCase()}',
-                            style: TextStyle(
-                              color: categoryStyle.color,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                              letterSpacing: 0.5,
+                          Flexible(
+                            child: Text(
+                              'CATEGORY: ${product.category.toUpperCase()}',
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: categoryStyle.color,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                                letterSpacing: 0.5,
+                              ),
                             ),
                           ),
                         ],
