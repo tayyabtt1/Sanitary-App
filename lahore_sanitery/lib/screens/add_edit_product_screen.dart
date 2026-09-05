@@ -52,14 +52,74 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final picked = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 80,
+  /// Shows a simple choice sheet — Camera or Gallery — instead of
+  /// always jumping straight to the gallery. This is what the client
+  /// was missing: previously there was no way to take a fresh photo
+  /// directly, only pick an existing one.
+  Future<void> _showImageSourceOptions() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                height: 4,
+                width: 40,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const Icon(Icons.camera_alt, color: Colors.blue),
+                title: const Text('Take Photo'),
+                onTap: () => Navigator.pop(context, ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library, color: Colors.blue),
+                title: const Text('Choose from Gallery'),
+                onTap: () => Navigator.pop(context, ImageSource.gallery),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
     );
-    if (picked != null) {
-      setState(() => _pickedImagePath = picked.path);
+
+    if (source == null) return;
+    await _pickImage(source);
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    final picker = ImagePicker();
+    try {
+      final picked = await picker.pickImage(
+        source: source,
+        imageQuality: 80,
+      );
+      if (picked != null) {
+        setState(() => _pickedImagePath = picked.path);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              source == ImageSource.camera
+                  ? 'Could not open camera. Check camera permission in phone settings.'
+                  : 'Could not open gallery.',
+            ),
+          ),
+        );
+      }
     }
   }
 
@@ -82,10 +142,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       price: double.parse(_priceController.text.trim()),
       imagePath: finalImagePath,
       aliases: widget.existingProduct?.aliases ?? [],
-      // Refreshed on every save (create AND edit) — this is what
-      // powers the "Last updated" reminder on the product detail
-      // screen, telling the shop owner how recently this price was
-      // confirmed rather than just when the product was first added.
       lastUpdated: DateTime.now(),
     );
 
@@ -138,9 +194,10 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.camera_alt_outlined, size: 32, color: Colors.grey),
+          Icon(Icons.add_a_photo_outlined, size: 32, color: Colors.grey),
           SizedBox(height: 8),
-          Text('Tap to add photo', style: TextStyle(color: Colors.grey)),
+          Text('Tap to take or choose a photo',
+              style: TextStyle(color: Colors.grey)),
         ],
       ),
     );
@@ -170,7 +227,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               GestureDetector(
-                onTap: _pickImage,
+                onTap: _showImageSourceOptions,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
